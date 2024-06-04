@@ -1,0 +1,7 @@
+path: /opt/ml/input/data
+train: train
+val: test
+
+# Classes
+names:
+  0: smoke
