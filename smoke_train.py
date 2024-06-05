@@ -6,7 +6,6 @@ import datetime
 import shutil
 import logging
 
-# Install ultralytics package
 subprocess.check_call([sys.executable, "-m", "pip", "install", "ultralytics"])
 
 import boto3
