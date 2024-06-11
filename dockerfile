@@ -1,18 +1,22 @@
-FROM python:3.8-slim
+FROM python:3.8-alpine
 
 WORKDIR /app
 
-# Install OS dependencies for PyTorch and other imaging libraries
-RUN apt-get update && apt-get install -y \
-    build-essential \
+# Install build dependencies and necessary libraries
+RUN apk update && apk add --no-cache \
+    build-base \
     libffi-dev \
-    libopenblas-dev \
+    openblas-dev \
     ffmpeg \
-    libsm6 \
-    libxext6
+    libjpeg-turbo-dev \
+    libpng-dev
 
-# Upgrade pip and install Python dependencies, including PyTorch and ultralytics
-RUN pip install pip install --no-cache-dir --default-timeout=120 --upgrade pip && \
+# Additional dependencies for handling X11 operations, if necessary
+# RUN apk add --no-cache xvfb-run
+
+# Install Python dependencies, including PyTorch and ultralytics
+# PyTorch on Alpine may need to be compiled or you might need to find a compatible wheel
+RUN pip install --no-cache-dir --upgrade pip && \
     pip install torch==2.3.1 numpy pandas boto3 ultralytics
 
 ENV PYTHONUNBUFFERED=1
