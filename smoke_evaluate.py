@@ -32,7 +32,7 @@ def upload_directory_to_s3(directory, bucket, s3_folder):
     
 if __name__ == '__main__':
     
-    install_packages() #TO-DO : can be removed once custom ECR URI passed to pipeline
+    install_packages()
     from ultralytics import YOLO
     
     model_tar_path = '/opt/ml/processing/model/model.tar.gz'

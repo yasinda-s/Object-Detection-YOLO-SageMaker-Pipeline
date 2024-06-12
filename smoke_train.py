@@ -5,11 +5,7 @@ import subprocess
 import datetime
 import shutil
 import logging
-
-subprocess.check_call([sys.executable, "-m", "pip", "install", "ultralytics"])
-
 import boto3
-from ultralytics import YOLO
 
 MODEL_DIR = '/opt/ml/model'
 DATETIME_STRING = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
@@ -19,6 +15,9 @@ SAGEMAKER_MODEL_PATH = os.path.join(MODEL_DIR, 'model.pt')
 S3_FOLDER_NAME = f"yolov8smokeweights-{DATETIME_STRING}"
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+def install_packages():
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "ultralytics"])
 
 def upload_directory_to_s3(bucket, local_directory, s3_prefix):
     s3_client = boto3.client('s3')
@@ -65,6 +64,10 @@ def train(args):
         sys.exit(1)
 
 if __name__ == '__main__':
+
+    install_packages()
+    from ultralytics import YOLO
+    
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--model', type=str, default="yolov8n.yaml")
