@@ -7,16 +7,31 @@ import sys
 import os
 import boto3
 import datetime
+import logging
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def install_packages():
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "ultralytics"])
-        
+    """ Install necessary Python packages. """
+    try:
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "ultralytics"])
+        logging.info("Packages installed successfully.")
+    except subprocess.CalledProcessError:
+        logging.error("Failed to install packages.")
+        sys.exit(1)
+
 def extract_model(tar_path, extract_to):
-    with tarfile.open(tar_path, "r:gz") as tar:
-        tar.extractall(path=extract_to)
-    print(f"Extracted {tar_path} to {extract_to}")
-        
+    """ Extract model tar.gz file to a specified directory. """
+    try:
+        with tarfile.open(tar_path, "r:gz") as tar:
+            tar.extractall(path=extract_to)
+        logging.info(f"Extracted {tar_path} to {extract_to}")
+    except tarfile.TarError:
+        logging.error(f"Failed to extract {tar_path}")
+        sys.exit(1)
+
 def upload_directory_to_s3(directory, bucket, s3_folder):
+    """ Upload a directory to an S3 bucket. """
     s3_client = boto3.client('s3')
     for root, dirs, files in os.walk(directory):
         for file in files:
@@ -26,48 +41,42 @@ def upload_directory_to_s3(directory, bucket, s3_folder):
 
             try:
                 s3_client.upload_file(local_path, bucket, s3_path)
-                print(f"Uploaded {local_path} to s3://{bucket}/{s3_path}")
-            except NoCredentialsError:
-                print("Credentials not available")
-    
-if __name__ == '__main__':
-    
-    install_packages()
-    from ultralytics import YOLO
+                logging.info(f"Uploaded {local_path} to s3://{bucket}/{s3_path}")
+            except boto3.exceptions.S3UploadFailedError as e:
+                logging.error(f"Failed to upload {local_path} to S3: {e}")
+                sys.exit(1)
+
+def configure_and_run_evaluation():
+    """ Configures and runs the model evaluation. """
+    from ultralytics import YOLO  # Importing here after installation
     
     model_tar_path = '/opt/ml/processing/model/model.tar.gz'
     extract_to = '/opt/ml/processing/model/'
     extract_model(model_tar_path, extract_to)
 
-    model_path = extract_to + 'model.pt'
-    print(f'Loading model from {model_path}...')
+    model_path = Path(extract_to) / 'model.pt'
+    logging.info(f'Loading model from {model_path}...')
 
-    model = YOLO(model_path)
-    print("Model loaded!")
+    model = YOLO(str(model_path))
+    logging.info("Model loaded successfully.")
     
     eval_output_dir = '/opt/ml/processing/evaluation'
     os.makedirs(eval_output_dir, exist_ok=True)
     
-    with open('/opt/ml/processing/input/code/data.yaml', 'w') as fp:
+    data_config_path = '/opt/ml/processing/input/code/data.yaml'
+    with open(data_config_path, 'w') as fp:
         data_conf = {
             'train': '/opt/ml/processing/input',
             'val': '/opt/ml/processing/input',
             'test': '/opt/ml/processing/input',
-            'names': {
-                '0': 'forklift',
-                '1': 'pallet jack',
-                '2': 'worker'
-            }
+            'names': ['smoke']
         }
         yaml.dump(data_conf, fp)
-        print(f'Updated data conf: {json.dumps(data_conf, indent=2)}')
+        logging.info(f'Updated data configuration: {json.dumps(data_conf, indent=2)}')
         
-    metrics = model.val(data="/opt/ml/processing/input/code/data.yaml", 
-                        project=eval_output_dir, 
-                        name="val-results")
+    metrics = model.val(data=str(data_config_path), project=eval_output_dir, name="val-results")
+    logging.info("Metrics received.")
     
-    print("Metrics receieved!")
-
     metrics_dict = {
         'mAP': metrics.box.map,
         'mAP50': metrics.box.map50,
@@ -76,12 +85,13 @@ if __name__ == '__main__':
         'precision': metrics.box.mp,
         'recall': metrics.box.mr
     }
-        
-    metrics_json_path = os.path.join(eval_output_dir, 'metrics.json')
     
+    metrics_json_path = Path(eval_output_dir) / 'metrics.json'
     with open(metrics_json_path, 'w') as f:
         json.dump(metrics_dict, f)
         
-    print("Evaluation Complete.")
-    
-    print(f"[METRICS] mAP={metrics_dict['mAP']}, mAP50={metrics_dict['mAP50']}, mAP75={metrics_dict['mAP75']}, precision={metrics_dict['precision']}, recall={metrics_dict['recall']}")
+    logging.info(f"Evaluation complete with metrics: {metrics_dict}")
+
+if __name__ == '__main__':
+    install_packages()
+    configure_and_run_evaluation()
