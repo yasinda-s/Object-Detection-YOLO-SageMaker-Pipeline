@@ -41,8 +41,9 @@ def upload_directory_to_s3(local_directory, s3_prefix):
 def train(args):
     """ Trains the YOLO model and handles file management. """
     logging.info("Model training started.")
-    from ultralytics import YOLO  # Importing here to ensure packages are installed first. RECOMMENDED : Have ultralytics installed in docker image instead.
-    model = YOLO(args.model)
+    from ultralytics import YOLO, YOLOv10  # Importing here to ensure packages are installed first. RECOMMENDED : Have ultralytics installed in docker image instead.
+    # model = YOLO(args.model)
+    model = YOLOv10(args.model)
     model.train(
         data="smoke_config.yaml", 
         epochs=args.epochs, 
@@ -71,7 +72,7 @@ def main():
     """ Main function to handle workflow logic. """
     install_packages()
     
-    parser = argparse.ArgumentParser(description="Train a YOLOv8 model for smoke detection.")
+    parser = argparse.ArgumentParser(description="Train a YOLO model for smoke detection.")
     parser.add_argument('--model', type=str, default="yolov8n.yaml")
     parser.add_argument('--epochs', type=int, default=10)
     parser.add_argument('--batch', type=int, default=16)

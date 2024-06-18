@@ -48,7 +48,7 @@ def upload_directory_to_s3(directory, bucket, s3_folder):
 
 def configure_and_run_evaluation():
     """ Configures and runs the model evaluation. """
-    from ultralytics import YOLO  # Importing here after installation
+    from ultralytics import YOLO, YOLOv10  # Importing here after installation
     
     model_tar_path = '/opt/ml/processing/model/model.tar.gz'
     extract_to = '/opt/ml/processing/model/'
@@ -57,7 +57,8 @@ def configure_and_run_evaluation():
     model_path = Path(extract_to) / 'model.pt'
     logging.info(f'Loading model from {model_path}...')
 
-    model = YOLO(str(model_path))
+    # model = YOLO(str(model_path))
+    model = YOLOv10(str(model_path))
     logging.info("Model loaded successfully.")
     
     eval_output_dir = '/opt/ml/processing/evaluation'
