@@ -1,6 +1,7 @@
 path: /opt/ml/input/data
 train: train
-val: test
+val: val
+test: test
 
 # Classes
 names:

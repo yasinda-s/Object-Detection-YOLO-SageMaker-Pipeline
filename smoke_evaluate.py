@@ -14,6 +14,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 def install_packages():
     """ Install necessary Python packages. """
     try:
+        # subprocess.check_call([sys.executable, "-m", "pip", "install", "git+https://github.com/THU-MIG/yolov10.git"])
         subprocess.check_call([sys.executable, "-m", "pip", "install", "ultralytics"])
         logging.info("Packages installed successfully.")
     except subprocess.CalledProcessError:
@@ -48,7 +49,7 @@ def upload_directory_to_s3(directory, bucket, s3_folder):
 
 def configure_and_run_evaluation():
     """ Configures and runs the model evaluation. """
-    from ultralytics import YOLO, YOLOv10  # Importing here after installation
+    from ultralytics import YOLO  # Importing here after installation
     
     model_tar_path = '/opt/ml/processing/model/model.tar.gz'
     extract_to = '/opt/ml/processing/model/'
@@ -57,25 +58,24 @@ def configure_and_run_evaluation():
     model_path = Path(extract_to) / 'model.pt'
     logging.info(f'Loading model from {model_path}...')
 
-    # model = YOLO(str(model_path))
-    model = YOLOv10(str(model_path))
+    model = YOLO(str(model_path))
+    # model = YOLOv10(str(model_path))
     logging.info("Model loaded successfully.")
     
     eval_output_dir = '/opt/ml/processing/evaluation'
     os.makedirs(eval_output_dir, exist_ok=True)
     
-    data_config_path = '/opt/ml/processing/input/code/data.yaml'
-    with open(data_config_path, 'w') as fp:
-        data_conf = {
-            'train': '/opt/ml/processing/input',
-            'val': '/opt/ml/processing/input',
-            'test': '/opt/ml/processing/input',
-            'names': ['smoke']
-        }
-        yaml.dump(data_conf, fp)
-        logging.info(f'Updated data configuration: {json.dumps(data_conf, indent=2)}')
+    # data_config_path = '/opt/ml/processing/input/code/data.yaml'
+    # with open(data_config_path, 'w') as fp:
+    #     data_conf = {
+    #         'test': '/opt/ml/processing/input/test',
+    #         'names': ['smoke']
+    #     }
+    #     yaml.dump(data_conf, fp)
+    #     logging.info(f'Updated data configuration: {json.dumps(data_conf, indent=2)}')
         
-    metrics = model.val(data=str(data_config_path), project=eval_output_dir, name="val-results")
+    # metrics = model.val(data=str(data_config_path), project=eval_output_dir, name="val-results")
+    metrics = model.val(project=eval_output_dir, name="val-results")
     logging.info("Metrics received.")
     
     metrics_dict = {
