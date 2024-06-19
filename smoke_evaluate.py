@@ -75,7 +75,8 @@ def configure_and_run_evaluation():
     #     logging.info(f'Updated data configuration: {json.dumps(data_conf, indent=2)}')
         
     # metrics = model.val(data=str(data_config_path), project=eval_output_dir, name="val-results")
-    metrics = model.val(project=eval_output_dir, name="val-results")
+    # metrics = model.val(project=eval_output_dir, name="val-results")
+    metrics = model.val(data="smoke_config.yaml", project=eval_output_dir, name="val-results", split='test')
     logging.info("Metrics received.")
     
     metrics_dict = {
