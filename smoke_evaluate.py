@@ -37,21 +37,21 @@ def extract_model(tar_path, extract_to):
         logging.error(f"Failed to extract {tar_path}")
         sys.exit(1)
 
-def upload_directory_to_s3(directory, bucket, s3_folder):
-    """ Upload a directory to an S3 bucket. """
-    s3_client = boto3.client('s3')
-    for root, dirs, files in os.walk(directory):
-        for file in files:
-            local_path = os.path.join(root, file)
-            relative_path = os.path.relpath(local_path, directory)
-            s3_path = os.path.join(s3_folder, relative_path)
+# def upload_directory_to_s3(directory, bucket, s3_folder):
+#     """ Upload a directory to an S3 bucket. """
+#     s3_client = boto3.client('s3')
+#     for root, dirs, files in os.walk(directory):
+#         for file in files:
+#             local_path = os.path.join(root, file)
+#             relative_path = os.path.relpath(local_path, directory)
+#             s3_path = os.path.join(s3_folder, relative_path)
 
-            try:
-                s3_client.upload_file(local_path, bucket, s3_path)
-                logging.info(f"Uploaded {local_path} to s3://{bucket}/{s3_path}")
-            except boto3.exceptions.S3UploadFailedError as e:
-                logging.error(f"Failed to upload {local_path} to S3: {e}")
-                sys.exit(1)
+#             try:
+#                 s3_client.upload_file(local_path, bucket, s3_path)
+#                 logging.info(f"Uploaded {local_path} to s3://{bucket}/{s3_path}")
+#             except boto3.exceptions.S3UploadFailedError as e:
+#                 logging.error(f"Failed to upload {local_path} to S3: {e}")
+#                 sys.exit(1)
 
 def configure_and_run_evaluation():
     """ Configures and runs the model evaluation. """
