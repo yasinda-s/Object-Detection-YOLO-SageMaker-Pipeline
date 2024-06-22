@@ -20,7 +20,6 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 def install_packages():
     """ Install necessary Python packages. """
     subprocess.check_call([sys.executable, "-m", "pip", "install", "ultralytics"])
-    # subprocess.check_call([sys.executable, "-m", "pip", "install", "git+https://github.com/THU-MIG/yolov10.git"])
 
 def upload_directory_to_s3(local_directory, s3_prefix):
     """ Uploads a directory to an S3 bucket. """
@@ -44,7 +43,6 @@ def train(args):
     logging.info("Model training started.")
     from ultralytics import YOLO  # Importing here to ensure packages are installed first. RECOMMENDED : Have ultralytics installed in docker image instead.
     model = YOLO(args.model)
-    # model = YOLOv10(args.model)
     model.train(
         data="smoke_config.yaml", 
         epochs=args.epochs, 
