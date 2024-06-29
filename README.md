@@ -1,8 +1,8 @@
-# YOLO-Sagemaker-Pipeline-Smoke-Detection
+# YOLOv10-Sagemaker-Pipeline-Smoke-Detection
  Creating a custom smoke detection YOLOv8model using SageMaker pipelines with following steps (shown in "Pipelines" UI):
 
- - Preprocessing (splitting data in S3 bucket into train, test).
- - Training (taking in user model configurations and training with yolov8x model and storing training results).
+ - Preprocessing (splitting data in S3 bucket into train, validation, & test).
+ - Training (taking in user model configurations and training with yolov10x model and storing training results).
  - Evaluation (benchmark of model evaluation using lambda step in workflow).
  - Conditional model registry push (ability to push into model registry if approved by user).
  - Model weights (.tar.gz file or .pt file) both stored in S3 URI and model registry for versioning/R&D.
