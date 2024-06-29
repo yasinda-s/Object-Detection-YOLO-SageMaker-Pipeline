@@ -37,32 +37,25 @@ def extract_model(tar_path, extract_to):
         logging.error(f"Failed to extract {tar_path}")
         sys.exit(1)
 
-# def upload_directory_to_s3(directory, bucket, s3_folder):
-#     """ Upload a directory to an S3 bucket. """
-#     s3_client = boto3.client('s3')
-#     for root, dirs, files in os.walk(directory):
-#         for file in files:
-#             local_path = os.path.join(root, file)
-#             relative_path = os.path.relpath(local_path, directory)
-#             s3_path = os.path.join(s3_folder, relative_path)
+def upload_directory_to_s3(directory, bucket, s3_folder):
+    """ Upload a directory to an S3 bucket. """
+    s3_client = boto3.client('s3')
+    for root, dirs, files in os.walk(directory):
+        for file in files:
+            local_path = os.path.join(root, file)
+            relative_path = os.path.relpath(local_path, directory)
+            s3_path = os.path.join(s3_folder, relative_path)
 
-#             try:
-#                 s3_client.upload_file(local_path, bucket, s3_path)
-#                 logging.info(f"Uploaded {local_path} to s3://{bucket}/{s3_path}")
-#             except boto3.exceptions.S3UploadFailedError as e:
-#                 logging.error(f"Failed to upload {local_path} to S3: {e}")
-#                 sys.exit(1)
+            try:
+                s3_client.upload_file(local_path, bucket, s3_path)
+                logging.info(f"Uploaded {local_path} to s3://{bucket}/{s3_path}")
+            except boto3.exceptions.S3UploadFailedError as e:
+                logging.error(f"Failed to upload {local_path} to S3: {e}")
+                sys.exit(1)
 
 def configure_and_run_evaluation():
     """ Configures and runs the model evaluation. """
-    logging.info(f"Current working directory: {os.getcwd()}")
-    
-    log_directory_contents('/opt/ml/processing/model/')
-    log_directory_contents('/opt/ml/processing/')
-    log_directory_contents('/opt/ml/processing/input/code/datasets')
-    log_directory_contents('/opt/ml/processing/input/code')
-
-    from ultralytics import YOLO
+    from ultralytics import YOLO  # Importing here after installation
     
     model_tar_path = '/opt/ml/processing/model/model.tar.gz'
     extract_to = '/opt/ml/processing/model/'
@@ -75,10 +68,20 @@ def configure_and_run_evaluation():
     logging.info("Model loaded successfully.")
     
     eval_output_dir = '/opt/ml/processing/evaluation'
-    log_directory_contents(eval_output_dir)
     os.makedirs(eval_output_dir, exist_ok=True)
     
-    metrics = model.val(data=data_config_path, project=eval_output_dir, name="val-results", split='test')
+    data_config_path = '/opt/ml/processing/input/code/data.yaml'
+    with open(data_config_path, 'w') as fp:
+        data_conf = {
+            'train': '/opt/ml/processing/input',
+            'val': '/opt/ml/processing/input',
+            'test': '/opt/ml/processing/input',
+            'names': ['smoke']
+        }
+        yaml.dump(data_conf, fp)
+        logging.info(f'Updated data configuration: {json.dumps(data_conf, indent=2)}')
+        
+    metrics = model.val(data=str(data_config_path), project=eval_output_dir, name="val-results", split="test")
     logging.info("Metrics received.")
     
     metrics_dict = {
