@@ -7,19 +7,25 @@ import shutil
 import logging
 import boto3
 
-MODEL_DIR = '/opt/ml/model'
 DATETIME_STRING = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+S3_FOLDER_NAME = f"YOLOv10-smoke-detection-weights-{DATETIME_STRING}"
+BUCKET_NAME = 'smoke-detection-model-weights'
+
+MODEL_DIR = '/opt/ml/model'
 LOCAL_WEIGHTS_SAVE_DIR = f"cv_weights/{DATETIME_STRING}"
 BEST_MODEL_PATH = os.path.join(LOCAL_WEIGHTS_SAVE_DIR, 'train/weights', 'best.pt')
 SAGEMAKER_MODEL_PATH = os.path.join(MODEL_DIR, 'model.pt')
-S3_FOLDER_NAME = f"yolov8smokeweights-{DATETIME_STRING}"
-BUCKET_NAME = 'smoke-detection-model-registry'
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def install_packages():
-    """ Install necessary Python packages. """
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "ultralytics"])
+    """ Install necessary Python packages. This step can be avoided by providing a docker image with ultralytics installed. """
+    try:
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "ultralytics"])
+        logging.info("Packages installed successfully.")
+    except subprocess.CalledProcessError:
+        logging.error("Failed to install packages.")
+        sys.exit(1)
 
 def upload_directory_to_s3(local_directory, s3_prefix):
     """ Uploads a directory to an S3 bucket. """
@@ -38,9 +44,10 @@ def upload_directory_to_s3(local_directory, s3_prefix):
     return True
 
 def train(args):
+    """ Handles model training with user provided configurations. """    
     try:
         logging.info("Model training started.")
-        from ultralytics import YOLO  # Importing here to ensure packages are installed first.
+        from ultralytics import YOLO  # Importing here to ensure packages are installed first
         model = YOLO(args.model)
         model.train(
             data="smoke_config.yaml", 
@@ -69,7 +76,7 @@ def main():
     """ Main function to handle workflow logic. """
     install_packages()
     
-    parser = argparse.ArgumentParser(description="Train a YOLO model for smoke detection.")
+    parser = argparse.ArgumentParser(description="Train a YOLO model for smoke detection")
     parser.add_argument('--model', type=str, default="yolov8n.yaml")
     parser.add_argument('--epochs', type=int, default=10)
     parser.add_argument('--batch', type=int, default=16)

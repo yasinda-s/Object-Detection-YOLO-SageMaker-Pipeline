@@ -12,7 +12,7 @@ import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def install_packages():
-    """ Install necessary Python packages. """
+    """ Install necessary Python packages. This step can be avoided by providing a docker image with ultralytics installed. """
     try:
         subprocess.check_call([sys.executable, "-m", "pip", "install", "ultralytics"])
         logging.info("Packages installed successfully.")
