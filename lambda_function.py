@@ -10,7 +10,6 @@ def lambda_handler(event, context):
     bucket = parsed_uri.netloc
     key_prefix = parsed_uri.path.lstrip('/')
 
-    # Thresholds from pipeline
     thresholds = {
         'mAP': event['mAPThreshold'],
         'mAP50': event['mAP50Threshold'],
@@ -19,18 +18,14 @@ def lambda_handler(event, context):
         'recall': event['recallThreshold']
     }
 
-    # Construct the full path to the metrics file
     full_key = f'{key_prefix}/metrics.json'
 
-    # Download the metrics file
     local_path = '/tmp/metrics.json'
     s3.download_file(bucket, full_key, local_path)
 
-    # Read and evaluate the metrics
     with open(local_path, 'r') as f:
         metrics = json.load(f)
 
-    # Check each metric against its threshold
     meets_criteria = True
     for key, threshold in thresholds.items():
         if key in metrics and metrics[key] < threshold:
